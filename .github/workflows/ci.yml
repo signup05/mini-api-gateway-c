@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build binary
+        run: make
+
+      - name: Start compose stack
+        run: docker compose up --build -d
+
+      - name: Wait for gateway healthcheck
+        run: |
+          for attempt in $(seq 1 30); do
+            status="$(docker inspect --format='{{json .State.Health.Status}}' mini-api-gateway-c 2>/dev/null || true)"
+            if [ "$status" = '"healthy"' ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+
+      - name: Run smoke tests
+        run: ./scripts/smoke_test.sh
+
+      - name: Stop compose stack
+        if: always()
+        run: docker compose down --volumes --remove-orphans

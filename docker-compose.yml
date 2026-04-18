@@ -1,0 +1,47 @@
+services:
+  gateway:
+    build:
+      context: .
+    image: mini-api-gateway-c:dev
+    container_name: mini-api-gateway-c
+    environment:
+      ROUTES_CONFIG: /app/routes.conf
+    ports:
+      - "8080:8080"
+    depends_on:
+      - users-service
+      - orders-service
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/users/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  users-service:
+    image: python:3.12-alpine
+    container_name: users-service
+    working_dir: /app
+    command: ["python", "mocks/mock_service.py", "users-service", "9001"]
+    volumes:
+      - ./mocks:/app/mocks:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9001/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
+
+  orders-service:
+    image: python:3.12-alpine
+    container_name: orders-service
+    working_dir: /app
+    command: ["python", "mocks/mock_service.py", "orders-service", "9002"]
+    volumes:
+      - ./mocks:/app/mocks:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9002/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 2s

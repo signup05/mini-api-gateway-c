@@ -1,0 +1,6 @@
+.git
+.github
+.codex
+docs
+mini-api-gateway-c
+src/*.o
