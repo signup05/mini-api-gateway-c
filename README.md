@@ -1,9 +1,9 @@
 # mini-api-gateway-c
 
-`mini-api-gateway-c`는 C로 구현한 경량 API Gateway / Reverse Proxy 프로젝트입니다.
+`mini-api-gateway-c`는 C로 구현한 경량 API Gateway / Reverse Proxy 실습 프로젝트입니다.
 HTTP 요청을 직접 읽고 파싱한 뒤, 요청 경로의 prefix에 따라 알맞은 업스트림 서비스로 전달합니다.
 
-이 프로젝트는 운영 환경용 API Gateway를 목표로 하지 않습니다. C 소켓 프로그래밍, HTTP 요청 흐름, reverse proxy 구조, 경로 기반 라우팅을 학습하고 포트폴리오로 설명하기 위해 작고 명확하게 만든 프로토타입입니다.
+이 프로젝트의 목표는 운영 환경용 API Gateway를 만드는 것이 아니라, C 언어에 대한 전반적인 지식을 다시 공부하기에 적합한 주제를 직접 구현해 보는 것입니다. 소켓 프로그래밍, 문자열 처리, 구조체, 포인터, 파일 기반 설정, 멀티스레딩, 빌드 자동화, Docker 기반 실행 환경까지 한 프로젝트 안에서 함께 다룰 수 있도록 구성했습니다.
 
 ## 주요 목표
 
