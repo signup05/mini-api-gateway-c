@@ -111,6 +111,103 @@ make smoke-test
 
 `scripts/smoke_test.sh`는 `/users`, `/orders`, `/unknown` 요청을 통해 정상 라우팅과 `404` 응답을 확인합니다.
 
+## 실행 테스트 예시
+
+Docker Compose로 전체 서비스를 실행합니다.
+
+```bash
+cd /home/liliy456/Desktop/mini-api-gateway-c
+docker compose up --build
+```
+
+다른 터미널에서 정상 라우팅을 확인합니다.
+
+```bash
+curl http://127.0.0.1:8080/users/1
+```
+
+예상 응답:
+
+```json
+{"service": "users-service", "method": "GET", "path": "/users/1", "message": "response from users-service"}
+```
+
+```bash
+curl http://127.0.0.1:8080/orders/42
+```
+
+예상 응답:
+
+```json
+{"service": "orders-service", "method": "GET", "path": "/orders/42", "message": "response from orders-service"}
+```
+
+등록되지 않은 경로는 `404`를 반환합니다.
+
+```bash
+curl -i http://127.0.0.1:8080/unknown
+```
+
+예상 응답:
+
+```text
+HTTP/1.1 404 Not Found
+Content-Type: text/plain; charset=utf-8
+Content-Length: 46
+Connection: close
+
+No upstream route matched the requested path.
+```
+
+스모크 테스트를 실행하면 다음과 같이 출력됩니다.
+
+```bash
+make smoke-test
+```
+
+예상 출력:
+
+```text
+smoke tests passed
+```
+
+테스트가 끝나면 Compose stack을 종료합니다.
+
+```bash
+docker compose down
+```
+
+## 자주 발생하는 오류
+
+`make: *** No rule to make target 'smoke-test'. Stop.`
+
+이 오류는 보통 `mini-api-gateway-c` 폴더가 아닌 다른 폴더에서 `make smoke-test`를 실행했을 때 발생합니다. 초기 프로젝트인 `cproxy`의 `Makefile`에는 `smoke-test` 타깃이 없습니다.
+
+```bash
+cd /home/liliy456/Desktop/mini-api-gateway-c
+make smoke-test
+```
+
+`curl: (7) Failed to connect to 127.0.0.1 port 8080`
+
+게이트웨이가 아직 실행되지 않았거나 Docker Compose stack이 내려간 상태입니다.
+
+```bash
+docker compose up --build
+```
+
+`HTTP/1.1 502 Bad Gateway`
+
+게이트웨이는 실행 중이지만 업스트림 서비스에 연결하지 못한 경우입니다. Docker Compose 환경에서는 `users-service`, `orders-service` 컨테이너가 함께 실행 중인지 확인합니다.
+
+```bash
+docker compose ps
+```
+
+`error during connect: open //./pipe/dockerDesktopLinuxEngine`
+
+Windows 환경에서 Docker Desktop이 실행되지 않았거나 Docker Engine에 연결할 수 없을 때 발생합니다. Docker Desktop을 먼저 실행한 뒤 다시 명령을 실행합니다.
+
 ## 구현 흐름
 
 1. `src/main.c`에서 게이트웨이 포트를 읽고 서버를 시작합니다.
