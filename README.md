@@ -54,6 +54,10 @@ mini-api-gateway-c/
 │   ├── http.h
 │   ├── proxy.h
 │   └── route.h
+├── mocks/
+│   └── mock_service.py
+├── scripts/
+│   └── smoke_test.sh
 └── src/
     ├── http.c
     ├── main.c
@@ -61,40 +65,21 @@ mini-api-gateway-c/
     └── route.c
 ```
 
-## 빌드
+## 실행 방법
+
+가장 간단한 실행 방법은 Docker Compose를 사용하는 것입니다. 게이트웨이와 모의 업스트림 서비스가 함께 실행됩니다.
 
 ```bash
-make
-```
-
-## 실행
-
-```bash
-./mini-api-gateway-c
-./mini-api-gateway-c 8081
-```
-
-## Docker 실행
-
-게이트웨이 이미지만 빌드하고 실행:
-
-```bash
-docker build -t mini-api-gateway-c:dev .
-docker run --rm -p 8080:8080 mini-api-gateway-c:dev
-```
-
-모의 업스트림 서비스까지 함께 실행:
-
-```bash
+cd /home/liliy456/Desktop/mini-api-gateway-c
 docker compose up --build
 ```
 
-다른 터미널에서 요청 테스트:
+다른 터미널에서 요청을 확인합니다.
 
 ```bash
 curl http://127.0.0.1:8080/users/1
 curl http://127.0.0.1:8080/orders/42
-curl http://127.0.0.1:8080/unknown
+curl -i http://127.0.0.1:8080/unknown
 ```
 
 종료:
@@ -103,23 +88,39 @@ curl http://127.0.0.1:8080/unknown
 docker compose down
 ```
 
-## 스모크 테스트
+게이트웨이 바이너리만 로컬에서 빌드할 수도 있습니다.
+
+```bash
+make
+./mini-api-gateway-c
+./mini-api-gateway-c 8081
+```
+
+로컬 바이너리만 실행할 경우에는 `9001`, `9002` 포트에서 업스트림 서비스가 따로 떠 있어야 합니다.
+
+## 테스트 방법
+
+Docker Compose stack이 실행 중인 상태에서 스모크 테스트를 실행합니다.
 
 ```bash
 make smoke-test
 ```
 
-`scripts/smoke_test.sh`는 `/users`, `/orders`, `/unknown` 요청을 통해 정상 라우팅과 `404` 응답을 확인합니다.
+예상 출력:
+
+```text
+smoke tests passed
+```
+
+`scripts/smoke_test.sh`는 다음을 확인합니다.
+
+- `/users/1` 요청이 `users-service`로 전달되는지 확인
+- `/orders/42` 요청이 `orders-service`로 전달되는지 확인
+- `/unknown` 요청이 `404`를 반환하는지 확인
 
 ## 실행 테스트 예시
 
-Docker Compose로 전체 서비스를 실행합니다.
-
-```bash
-docker compose up --build
-```
-
-다른 터미널에서 정상 라우팅을 확인합니다.
+`/users/1` 요청:
 
 ```bash
 curl http://127.0.0.1:8080/users/1
@@ -131,6 +132,8 @@ curl http://127.0.0.1:8080/users/1
 {"service": "users-service", "method": "GET", "path": "/users/1", "message": "response from users-service"}
 ```
 
+`/orders/42` 요청:
+
 ```bash
 curl http://127.0.0.1:8080/orders/42
 ```
@@ -141,7 +144,7 @@ curl http://127.0.0.1:8080/orders/42
 {"service": "orders-service", "method": "GET", "path": "/orders/42", "message": "response from orders-service"}
 ```
 
-등록되지 않은 경로는 `404`를 반환합니다.
+등록되지 않은 경로 요청:
 
 ```bash
 curl -i http://127.0.0.1:8080/unknown
@@ -158,29 +161,11 @@ Connection: close
 No upstream route matched the requested path.
 ```
 
-스모크 테스트를 실행하면 다음과 같이 출력됩니다.
-
-```bash
-make smoke-test
-```
-
-예상 출력:
-
-```text
-smoke tests passed
-```
-
-테스트가 끝나면 Compose stack을 종료합니다.
-
-```bash
-docker compose down
-```
-
 ## 자주 발생하는 오류
 
 `make: *** No rule to make target 'smoke-test'. Stop.`
 
-이 오류는 보통 `mini-api-gateway-c` 폴더가 아닌 다른 폴더에서 `make smoke-test`를 실행했을 때 발생합니다. 초기 프로젝트인 `cproxy`의 `Makefile`에는 `smoke-test` 타깃이 없습니다.
+`mini-api-gateway-c` 폴더가 아닌 다른 폴더에서 `make smoke-test`를 실행했을 때 발생할 수 있습니다. 초기 프로젝트인 `cproxy`의 `Makefile`에는 `smoke-test` 타깃이 없습니다.
 
 ```bash
 make smoke-test
@@ -205,6 +190,16 @@ docker compose ps
 `error during connect: open //./pipe/dockerDesktopLinuxEngine`
 
 Windows 환경에서 Docker Desktop이 실행되지 않았거나 Docker Engine에 연결할 수 없을 때 발생합니다. Docker Desktop을 먼저 실행한 뒤 다시 명령을 실행합니다.
+
+## CI
+
+GitHub Actions는 push와 pull request에서 다음 흐름을 검증합니다.
+
+- `make`로 C 바이너리 빌드
+- `docker compose up --build -d`로 게이트웨이와 모의 서비스 실행
+- gateway healthcheck 대기
+- `scripts/smoke_test.sh`로 라우팅 동작 확인
+- 테스트 후 Docker Compose stack 정리
 
 ## 구현 흐름
 

@@ -1,6 +1,8 @@
 .git
 .github
+.gitignore
 .codex
 docs
+README.md
 mini-api-gateway-c
 src/*.o
