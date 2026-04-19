@@ -120,6 +120,26 @@ make smoke-test
 5. `src/route.c`에서 경로 prefix에 맞는 업스트림 라우트를 찾습니다.
 6. 게이트웨이가 업스트림 서비스에 연결해 요청을 전달하고 응답을 클라이언트로 relay합니다.
 
+## cproxy에서 발전한 점
+
+이 프로젝트는 초기 구현인 `cproxy`를 바탕으로 확장했습니다. `cproxy`는 클라이언트가 요청 안에 목적지 서버를 지정하면 프록시가 해당 서버로 요청을 전달하는 forward proxy 구조였습니다. `mini-api-gateway-c`는 여기서 한 단계 발전해, 게이트웨이가 요청 경로를 기준으로 목적지 서비스를 직접 선택하는 reverse proxy / API Gateway 구조로 바뀌었습니다.
+
+주요 개선 사항은 다음과 같습니다.
+
+- forward proxy에서 reverse proxy / API Gateway 구조로 변경
+- 클라이언트가 목적지를 지정하는 방식에서 게이트웨이가 라우팅을 결정하는 방식으로 변경
+- `Host` header 기반 전달에서 `/users`, `/orders` 같은 경로 prefix 기반 라우팅으로 확장
+- `route.c`, `route.h`를 추가해 라우팅 책임을 별도 모듈로 분리
+- `routes.conf`와 `ROUTES_CONFIG` 환경 변수를 통해 라우팅 설정을 외부에서 주입할 수 있도록 개선
+- Dockerfile과 Docker Compose를 추가해 게이트웨이와 모의 업스트림 서비스를 함께 실행할 수 있도록 구성
+- `users-service`, `orders-service` 모의 서비스를 추가해 실제 서비스 라우팅 흐름을 재현
+- `scripts/smoke_test.sh`를 추가해 정상 라우팅과 `404` 응답을 자동 검증
+- `X-Forwarded-For`, `X-Forwarded-Proto`, upstream용 `Host` header 재작성 등 reverse proxy에 가까운 header 처리 추가
+- socket timeout과 종료 signal 처리 등 실행 안정성 개선
+- GitHub Actions CI를 추가해 빌드와 Docker Compose 기반 스모크 테스트를 자동화
+
+정리하면 `cproxy`가 HTTP 프록시의 기본 동작을 이해하기 위한 프로젝트였다면, `mini-api-gateway-c`는 여러 백엔드 서비스 앞단에서 요청을 받아 서비스별로 분기하는 API Gateway 흐름을 학습하기 위한 프로젝트입니다.
+
 ## 현재 한계
 
 - plain HTTP만 지원합니다.
