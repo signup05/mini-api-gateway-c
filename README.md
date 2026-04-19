@@ -116,7 +116,6 @@ make smoke-test
 Docker Compose로 전체 서비스를 실행합니다.
 
 ```bash
-cd /home/liliy456/Desktop/mini-api-gateway-c
 docker compose up --build
 ```
 
@@ -184,7 +183,6 @@ docker compose down
 이 오류는 보통 `mini-api-gateway-c` 폴더가 아닌 다른 폴더에서 `make smoke-test`를 실행했을 때 발생합니다. 초기 프로젝트인 `cproxy`의 `Makefile`에는 `smoke-test` 타깃이 없습니다.
 
 ```bash
-cd /home/liliy456/Desktop/mini-api-gateway-c
 make smoke-test
 ```
 
