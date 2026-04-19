@@ -70,7 +70,7 @@ mini-api-gateway-c/
 가장 간단한 실행 방법은 Docker Compose를 사용하는 것입니다. 게이트웨이와 모의 업스트림 서비스가 함께 실행됩니다.
 
 ```bash
-cd /home/liliy456/Desktop/mini-api-gateway-c
+cd mini-api-gateway-c
 docker compose up --build
 ```
 
